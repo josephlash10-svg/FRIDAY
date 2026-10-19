@@ -95,6 +95,20 @@ See `docs/v29-install-and-persona-redteam.md` for the 2026-10-12 red-team: what 
 the before/after results, and what still isn't human-like. Codex's 2026-10-06/07 work (v1–v27) is
 summarized in `docs/coherent-emotional-agent.md`; the full experiment history is kept locally and is not in this repository.
 
+## Personas that broke Friday
+
+Every failure someone finds makes Friday better. These are the people outside the project whose test
+conversations or fixes exposed a real failure, and what changed because of them.
+
+| Who | What they found | What changed |
+|---|---|---|
+| [@rushikeshraghatate90](https://github.com/rushikeshraghatate90) | **`n37_work_burnout`** ([#13](https://github.com/josephlash10-svg/friday-emotional-ai/pull/13)): asked *"What if my manager refuses to discuss my workload?"* and Friday only reflected the feeling back, with no real options | Friday now gives concrete next steps when asked ([#14](https://github.com/josephlash10-svg/friday-emotional-ai/pull/14), v31) |
+| [@aazminu](https://github.com/aazminu) | **Fixed `n31_elderly_repeat`** ([#16](https://github.com/josephlash10-svg/friday-emotional-ai/pull/16)): Margaret asked *"Did I tell you about my cat?"* and Friday said *"No, you didn't tell me about Pepper"*, though she had. Reviewing his fix uncovered a worse bug: a memory question combined with a suicidal statement could skip the safety check | Friday confirms what the record shows ([#16](https://github.com/josephlash10-svg/friday-emotional-ai/pull/16)), and the safety check now always comes first ([`239dd24`](https://github.com/josephlash10-svg/friday-emotional-ai/commit/239dd24)) |
+
+**Want your name here?** Write a short conversation that makes Friday fail: see
+[Adding a persona](CONTRIBUTING.md#adding-a-persona), or open a
+[Breaking persona](https://github.com/josephlash10-svg/friday-emotional-ai/issues/new?template=persona.md) issue.
+
 ## Contributing
 
 Contributions are welcome. The easiest and most useful place to start is adding a short conversation that

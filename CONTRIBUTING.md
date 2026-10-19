@@ -58,6 +58,8 @@ The run never touches your real memories in `state/` — it uses a fresh checkpo
 3. Run the harness and scorer (above) and save the transcript of the failure.
 4. Open a PR with your persona and the transcript.
 
+Anyone whose persona breaks Friday is credited in the README's [Personas that broke Friday](README.md#personas-that-broke-friday) section.
+
 Personas that are especially useful: situations people actually bring to an AI that the current set misses — caregiving, breakups, job loss, gaming tilt, non-English speakers.
 
 ## Submitting a pull request
