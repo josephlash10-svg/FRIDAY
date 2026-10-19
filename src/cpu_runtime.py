@@ -9,6 +9,7 @@ import socket
 import subprocess
 import time
 import re
+import secrets
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 from self_awareness import reflect, grounded_self_reply
@@ -186,7 +187,12 @@ class NativeLanguage:
                  '-t',str(threads),'-tb',str(threads),'-c',str(context*2),'-np','2','-ngl','0','-b',str(options.get('batch',256)),'-ub',str(options.get('ubatch',128)),
                  '--poll','0','--reasoning','off','--jinja','--no-webui']
         if not options.get('repack',True):command.append('--no-repack')
-        self.process=subprocess.Popen(command,stdout=self.log,stderr=self.log,creationflags=flags)
+        # The server only listens on 127.0.0.1, but it allows any origin, so a web page open in the browser
+        # could otherwise talk to it while Friday runs. A fresh random key per start closes that. It goes
+        # through the environment, not the command line, so it doesn't show up in process lists.
+        self.api_key=secrets.token_urlsafe(32)
+        self.process=subprocess.Popen(command,stdout=self.log,stderr=self.log,creationflags=flags,
+                                      env=dict(os.environ,LLAMA_API_KEY=self.api_key))
         self._job=bind_child_to_this_process(self.process.pid)  # server dies with this window, even when it's closed with X
         atexit.register(self.close)
         deadline=time.perf_counter()+180  # a 4B model on a busy 16 GB laptop can take over a minute
@@ -194,7 +200,7 @@ class NativeLanguage:
             while time.perf_counter()<deadline:
                 if self.process.poll() is not None: raise RuntimeError('Native language process exited; see state/logs/native-language.log.')
                 try:
-                    with urlopen(self.url+'/health',timeout=1) as response:
+                    with urlopen(Request(self.url+'/health',headers=self.headers()),timeout=1) as response:
                         if response.status==200:
                             if options.get('trim_after_load',False):trim_owned_working_set(self.process.pid)
                             return
@@ -209,8 +215,13 @@ class NativeLanguage:
             try: self.process.wait(timeout=5)
             except subprocess.TimeoutExpired: self.process.kill();self.process.wait(timeout=5)
         if self.log: self.log.close();self.log=None
+    def headers(self):
+        """JSON content type plus this session's server key (absent on test doubles built without __init__)."""
+        sent={'Content-Type':'application/json'}
+        if getattr(self,'api_key',None):sent['Authorization']='Bearer '+self.api_key
+        return sent
     def request(self,path,payload):
-        req=Request(self.url+path,data=json.dumps(payload).encode('utf-8'),headers={'Content-Type':'application/json'})
+        req=Request(self.url+path,data=json.dumps(payload).encode('utf-8'),headers=self.headers())
         try:
             with urlopen(req,timeout=60) as response: return json.load(response)
         except (URLError,TimeoutError) as error: raise RuntimeError(f'Native language request failed: {error}') from error
@@ -472,7 +483,7 @@ class NativeLanguage:
             payload.update(dry_multiplier=.6,dry_base=1.75,dry_allowed_length=3,dry_penalty_last_n=self.context,
                            logit_bias=[[w,-2.5] for w in CLICHE_WORDS])
         if 'ministral' in str(getattr(self,'model','')).lower():payload['temperature']=.08
-        req=Request(self.url+'/v1/chat/completions',data=json.dumps(payload).encode('utf-8'),headers={'Content-Type':'application/json'})
+        req=Request(self.url+'/v1/chat/completions',data=json.dumps(payload).encode('utf-8'),headers=self.headers())
         pieces=[];first=None;completion_tokens=None
         review_enabled=getattr(self,'validate_replies',False)
         try:
@@ -557,7 +568,7 @@ class NativeLanguage:
         payload={'model':'local','messages':messages,'max_tokens':max_new,'temperature':.6,'top_p':.85,'top_k':20,'seed':int(time.time())%100000,
                  'stream':True,'id_slot':0,'cache_prompt':True,'chat_template_kwargs':{'enable_thinking':False},
                  'logit_bias':[[w,-2.5] for w in CLICHE_WORDS]}
-        req=Request(self.url+'/v1/chat/completions',data=json.dumps(payload).encode('utf-8'),headers={'Content-Type':'application/json'})
+        req=Request(self.url+'/v1/chat/completions',data=json.dumps(payload).encode('utf-8'),headers=self.headers())
         pieces=[]
         try:
             with urlopen(req,timeout=120) as response:

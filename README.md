@@ -21,6 +21,7 @@ Then double-click `RUN.bat`. On first run Friday starts from `release/friday-bas
 are then kept in `state/`, which is git-ignored and should never be uploaded.
 
 **Security note:** `.pth` checkpoints are loaded with Python pickle. Only load checkpoints you trust, such as the one in this repository.
+To report a vulnerability privately, see [`SECURITY.md`](SECURITY.md).
 
 **Start here:** double-click `RUN.bat`. You'll see the intro art, then two progress bars:
 **Soul** (the emotional engine: core libraries, checkpoint, memories) and **Brain** (the local

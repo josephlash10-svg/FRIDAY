@@ -23,7 +23,7 @@ variants = {
 try:
     for name, extra in variants.items():
         payload = {**base, **extra}
-        req = Request(native.url + '/v1/chat/completions', data=json.dumps(payload).encode(), headers={'Content-Type': 'application/json'})
+        req = Request(native.url + '/v1/chat/completions', data=json.dumps(payload).encode(), headers=native.headers())
         try:
             with urlopen(req, timeout=60) as r:
                 body = r.read().decode('utf-8', 'replace')

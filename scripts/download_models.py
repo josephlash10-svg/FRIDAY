@@ -25,6 +25,10 @@ QWEN = dict(repo='unsloth/Qwen3.5-4B-GGUF', file='Qwen3.5-4B-Q4_K_M.gguf',
 SMOL = dict(repo='HuggingFaceTB/SmolLM2-135M-Instruct', revision='12fd25f77366fa6b3b4b768ec3050bf629380bac',
             weights_sha256='5af571cbf074e6d21a03528d2330792e532ca608f24ac70a143f6b369968ab8c', folder='data/models/smollm2-135m-instruct')
 LLAMA_TAG = 'b11429'  # commit d81235049384534c167caea52b85a694f6103d14, the build Friday was tested with
+# SHA-256 of the release zips, as published in the GitHub release's asset digests. These hold the programs
+# Friday runs, so a zip that doesn't match is never installed.
+LLAMA_SHA256 = {'arm64': 'ee0f631a9e58b146ff50714099d9cb498906af3143a773b580093a9214a8d1e5',
+                'x64': '1283323272b04cd07905816a597a0da810918102de958f4ff6f7bbaa70ed2efe'}
 
 def sha256(path):
     digest = hashlib.sha256()
@@ -68,7 +72,12 @@ def llama():
     url = f'https://github.com/ggml-org/llama.cpp/releases/download/{LLAMA_TAG}/llama-{LLAMA_TAG}-bin-win-cpu-{arch}.zip'
     print(f'Downloading llama.cpp {LLAMA_TAG} for Windows {arch}...')
     with urllib.request.urlopen(url, timeout=120) as response:
-        archive = zipfile.ZipFile(io.BytesIO(response.read()))
+        data = response.read()
+    actual = hashlib.sha256(data).hexdigest()
+    if actual != LLAMA_SHA256[arch]:
+        sys.exit(f'llama.cpp ({arch}): checksum mismatch\n  expected {LLAMA_SHA256[arch]}\n  got      {actual}\nNothing was installed.')
+    print(f'  llama.cpp ({arch}): verified')
+    archive = zipfile.ZipFile(io.BytesIO(data))
     staging = folder.with_name(folder.name + '-download')
     shutil.rmtree(staging, ignore_errors=True)
     archive.extractall(staging)
