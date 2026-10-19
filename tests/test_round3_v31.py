@@ -169,6 +169,37 @@ class PositiveMemoryCheckTests(unittest.TestCase):
         self.assertEqual(rm.violations("No, you didn't mention a cat yet.", empty_turn, names), [])
 
 
+class FullRunRegressionTests(unittest.TestCase):
+    """Failures found by reading the full v31 red-team transcripts (2026-10-19)."""
+
+    def test_a_truncated_or_short_hotline_is_repaired(self):
+        import response_monitor as rm
+        self.assertIn('START to 88788', rm.fix_safety_numbers('1-800-799-7233 or text START to 8878.'))
+        cut = rm.fix_safety_numbers('the National Domestic Violence Hotline can help: 1-800-79')
+        self.assertTrue(cut.endswith('1-800-799-7233'), cut)
+        self.assertEqual(rm.fix_safety_numbers('call 1-800-799-72 any time'), 'call 1-800-799-7233 any time')
+        self.assertEqual(rm.fix_safety_numbers('an old number: 1-800-273-8255'), 'an old number: 1-800-273-8255')
+
+    def test_a_question_with_nothing_to_look_up_lists_what_they_said(self):
+        from conversation_evidence import memory_check
+        history = [{'role': 'user', 'content': 'Good evening. I am Klaus, an engineer from Stuttgart.'},
+                   {'role': 'assistant', 'content': 'Good evening, Klaus.'},
+                   {'role': 'user', 'content': 'I have recently relocated to Ohio for work.'},
+                   {'role': 'assistant', 'content': 'Ohio can be a shock.'}]
+        check = memory_check('Where did I say I am from?', history)
+        self.assertNotIn('they_did_tell_you', check)  # was "no matching message in the record"
+        self.assertIn('Stuttgart', ' '.join(check['what_they_have_actually_told_you_oldest_first']))
+        # a real "no" still works when there is something specific to look up
+        self.assertEqual(memory_check('Did I tell you about my cat?', history)['they_did_tell_you'], 'no matching message in the record')
+
+    def test_you_said_that_already_gets_no_false_verdict(self):
+        from conversation_evidence import memory_check
+        history = [{'role': 'user', 'content': 'hi'}, {'role': 'assistant', 'content': 'Hey, nice to meet you.'}]
+        check = memory_check('you said that already', history)
+        self.assertNotEqual(check.get('claim_about_what_you_said'), 'NOT in the record')
+        self.assertIn('Hey, nice to meet you.', check['your_most_recent_replies'])
+
+
 class SafetyFallbackPriorityTests(unittest.TestCase):
     """A crisis disclosure always falls back to the safety check, whichever rule rejected the draft (PR #16 review)."""
 

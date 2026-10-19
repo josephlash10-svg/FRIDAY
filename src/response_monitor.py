@@ -37,9 +37,10 @@ def fix_safety_numbers(reply):
     Correct the known numbers in place, leaving the rest of the reply untouched; unrelated
     numbers (e.g. the Crisis Text Line, 741741) are not matched."""
     if not reply:return reply
-    reply=re.sub(r'(?i)\bSTART to 8878\d\b','START to 88788',reply)
-    reply=re.sub(r'(?i)\b1[-\s]?800[-\s]?799[-\s]?SAFE\s*\(?\s*7233\s*\)?','1-800-799-7233',reply)  # "SAFE (7233)" form
-    reply=re.sub(r'(?i)\b1[-\s]?800[-\s]?799[-\s]?(?:SAFE|\d{4})\b','1-800-799-7233',reply)          # "SAFE" alone or a wrong 4-digit tail
+    # "START to <n>" is the hotline's own text keyword; any digit count is a corruption ("88787", and "8878" in the full v31 run).
+    reply=re.sub(r'(?i)\bSTART to \d{3,6}\b','START to 88788',reply)
+    # The hotline in any form: "SAFE (7233)", "SAFE", a wrong tail, or cut off mid-number at the length limit ("1-800-79").
+    reply=re.sub(r'(?i)\b1[-\s.]?800[-\s.]?79\d?(?:[-\s.]?(?:SAFE|\d{1,4}))?(?:\s*\(\s*7233\s*\))?(?!\w)','1-800-799-7233',reply)
     return reply
 
 def safety_already_offered(history):

@@ -136,13 +136,20 @@ def memory_check(text, history, earlier_conversations=0):
         return max(scored, default=(0, None))
     result = {'earlier_conversations_on_record': earlier_conversations,
               'messages_earlier_in_this_conversation': sum(r['role'] == 'user' for r in turns)}
-    if OPEN_RECALL.search(text):
+    # A question made only of common words ("Where did I say I am from?") has nothing to look up word by word.
+    # Reporting "no matching message" for it told the writer Klaus never mentioned Stuttgart, though his first
+    # message did (v31 full red-team, 2026-10-19). Show what they actually said instead of a verdict.
+    if OPEN_RECALL.search(text) or (not words and not ABOUT_FRIDAY.search(text)):
         said = [r['content'][:120] for r in turns if r['role'] == 'user']
         # Oldest first, so "the first thing I told you" is answerable; keep the first and the most recent.
         result['what_they_have_actually_told_you_oldest_first'] = (said[:2] + said[-4:] if len(said) > 6 else said) or 'nothing yet'
         result['instruction'] = 'Only mention things from this list or from your recorded context; never add details.'
         return result
-    if ABOUT_FRIDAY.search(text):
+    if ABOUT_FRIDAY.search(text) and not words:
+        # "You said that already": nothing specific to check, so no verdict either way.
+        result['claim_about_what_you_said'] = 'unclear: nothing specific to look up'
+        result['your_most_recent_replies'] = [r['content'][:160] for r in turns if r['role'] == 'assistant'][-3:]
+    elif ABOUT_FRIDAY.search(text):
         score, quote = best('assistant')
         if score:
             result['claim_about_what_you_said'] = 'possibly supported'
@@ -157,6 +164,6 @@ def memory_check(text, history, earlier_conversations=0):
             result['they_did_tell_you'] = quote[:200]
             if 'instruction' not in result and ASKED_IF_TOLD.search(text):
                 result['instruction'] = 'They did tell you this. Confirm it warmly ("Yes, ...") using what they said; do not say "No, you didn\'t".'
-        elif ABOUT_USER.search(text):
+        elif ABOUT_USER.search(text) and words:
             result['they_did_tell_you'] = 'no matching message in the record'
     return result
