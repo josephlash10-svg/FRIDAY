@@ -1,4 +1,4 @@
-# Emotional Project — Friday (V14, build v31)
+# Emotional Project — Friday (V14, build v31.1)
 
 [![Tests](https://github.com/josephlash10-svg/friday-emotional-ai/actions/workflows/tests.yml/badge.svg)](https://github.com/josephlash10-svg/friday-emotional-ai/actions/workflows/tests.yml)
 

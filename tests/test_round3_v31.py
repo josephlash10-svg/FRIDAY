@@ -277,6 +277,25 @@ class ComparisonPageFindingsTests(unittest.TestCase):
         self.assertEqual(cc.unflip_speaker('You asked me to be sarcastic, and I asked you about the car.', q),
                          'You asked me to be sarcastic, and I asked you about the car.')
 
+    def test_swap_reaches_the_screen_through_the_review_path(self):
+        import json, tempfile
+        from pathlib import Path
+        from unittest.mock import patch
+        import cpu_runtime as cpu
+        import test_cpu_runtime
+        client, turn = test_cpu_runtime.CpuRuntimeTests().fixture()
+        client.validate_replies = True
+        turn.text = 'what did i ask you to be more of?'
+        draft = 'I asked you to be a little more sarcastic. Specifically, dry humor.'
+        class Response:
+            def __enter__(self): return iter([b'data: ' + json.dumps({'choices': [{'delta': {'content': draft}}]}).encode() + b'\n', b'data: [DONE]\n'])
+            def __exit__(self, *args): pass
+        shown = []
+        with tempfile.TemporaryDirectory() as folder, patch.object(cpu, 'ROOT', Path(folder)), patch.object(cpu, 'urlopen', return_value=Response()):
+            reply = client.respond(turn, 'ANSWER', on_token=shown.append)
+        self.assertEqual(reply, 'You asked me to be a little more sarcastic. Specifically, dry humor.')
+        self.assertEqual(shown, [reply])
+
     def test_invented_senses_are_dropped_by_salvage(self):
         from types import SimpleNamespace
         import response_monitor as rm
