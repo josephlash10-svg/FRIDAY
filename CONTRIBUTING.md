@@ -6,10 +6,10 @@ Please read the safety warning at the top of the [README](README.md) first: Frid
 
 ## Good ways to contribute
 
-- **Add a persona that breaks Friday.** The highest-value contribution and the easiest to start with — a short conversation that makes Friday fail, added to the red-team set. See [Adding a persona](#adding-a-persona) and issue [#12](https://github.com/josephlash10-svg/FRIDAY/issues/12) for the template (the first outside contribution, [#13](https://github.com/josephlash10-svg/FRIDAY/pull/13), was exactly this).
-- **Fix a bug.** The [open issues](https://github.com/josephlash10-svg/FRIDAY/issues) each have a "Where to start" pointer. Issues labelled [`good first issue`](https://github.com/josephlash10-svg/FRIDAY/issues?q=is%3Aopen+label%3A%22good+first+issue%22) are the most self-contained.
+- **Add a persona that breaks Friday.** The highest-value contribution and the easiest to start with — a short conversation that makes Friday fail, added to the red-team set. See [Adding a persona](#adding-a-persona) and issue [#12](https://github.com/josephlash10-svg/friday-emotional-ai/issues/12) for the template (the first outside contribution, [#13](https://github.com/josephlash10-svg/friday-emotional-ai/pull/13), was exactly this).
+- **Fix a bug.** The [open issues](https://github.com/josephlash10-svg/friday-emotional-ai/issues) each have a "Where to start" pointer. Issues labelled [`good first issue`](https://github.com/josephlash10-svg/friday-emotional-ai/issues?q=is%3Aopen+label%3A%22good+first+issue%22) are the most self-contained.
 - **Improve the docs.** If something in the setup or the [math write-up](docs/MATH.md) was unclear, a fix helps the next person.
-- **Port it off Windows.** Friday is Windows/ARM64 today; Linux and macOS support is [#11](https://github.com/josephlash10-svg/FRIDAY/issues/11).
+- **Port it off Windows.** Friday is Windows/ARM64 today; Linux and macOS support is [#11](https://github.com/josephlash10-svg/friday-emotional-ai/issues/11).
 
 ## Setup
 
@@ -69,4 +69,4 @@ Personas that are especially useful: situations people actually bring to an AI t
 
 Match the style of the code around you; the engine's checks are deliberately surface heuristics, not attempts at understanding. By contributing, you agree your contribution is licensed under the repository's [Apache-2.0 license](LICENSE).
 
-Questions are welcome in [Discussions](https://github.com/josephlash10-svg/FRIDAY/discussions) or on an issue.
+Questions are welcome in [Discussions](https://github.com/josephlash10-svg/friday-emotional-ai/discussions) or on an issue.

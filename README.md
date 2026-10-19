@@ -1,6 +1,6 @@
 # Emotional Project — Friday (V14, build v30)
 
-[![Tests](https://github.com/josephlash10-svg/FRIDAY/actions/workflows/tests.yml/badge.svg)](https://github.com/josephlash10-svg/FRIDAY/actions/workflows/tests.yml)
+[![Tests](https://github.com/josephlash10-svg/friday-emotional-ai/actions/workflows/tests.yml/badge.svg)](https://github.com/josephlash10-svg/friday-emotional-ai/actions/workflows/tests.yml)
 
 > **Experimental research prototype.** Friday is an AI with a modeled emotional state. It is **not a person, not a therapist,
 > and not a crisis or mental-health service.** It makes mistakes: in its latest red-team, 9% of replies to new people were real
@@ -99,7 +99,7 @@ summarized in `docs/coherent-emotional-agent.md`; the full experiment history is
 
 Contributions are welcome. The easiest and most useful place to start is adding a short conversation that
 makes Friday fail — see [`CONTRIBUTING.md`](CONTRIBUTING.md) and the
-[`good first issue`](https://github.com/josephlash10-svg/FRIDAY/issues?q=is%3Aopen+label%3A%22good+first+issue%22) label.
+[`good first issue`](https://github.com/josephlash10-svg/friday-emotional-ai/issues?q=is%3Aopen+label%3A%22good+first+issue%22) label.
 Please also read the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## License
