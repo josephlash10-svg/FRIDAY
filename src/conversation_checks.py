@@ -259,6 +259,20 @@ INVENTED_LIFE = re.compile(r"(?i)(?<!\w)(?:(?:my|much of a|any|a) social life|ha
 FEELING_QUESTION = re.compile(r"(?i)(?:(?<!\w)(?:are|r) (?:you|u)|(?<!\w)do (?:you|u) (?:ever )?(?:get|feel)|^\W*(?:so )?you (?:are|feel|seem|sound))(?: ever| still| feeling| a (?:little|bit))? (" + '|'.join(sorted(FEELING_CHANNELS, key=len, reverse=True)) + r")(?!\w)")
 AFFIRMS = re.compile(r"(?i)^\W*(?:yes|yeah|yep|yup|sometimes|a (?:little|bit)|kind of|kinda|definitely|honestly,? (?:yes|yeah|a little)|i (?:am|do)(?=\s*[.,!]|\s*$| (?:get|feel|sometimes|a (?:little|bit)|kind of)))\b")
 
+# --- A sensory experience it can't have ("you watch any football?" -> "It's usually too loud for me.") ---
+INVENTED_SENSES = re.compile(r"(?i)(?<!\w)(?:too|so|way|a bit|kind of|pretty|really) (?:loud|noisy|bright|crowded|cold|hot|chilly) for me(?!\w)")
+
+# --- Who asked whom ("what did i ask you to be more of?" -> "I asked you to be a little more sarcastic") ---
+# Happened in every run of n35 (v30, v31, the final re-run); every other "what did I tell you" was answered right.
+ASKED_ABOUT_OWN_WORDS = re.compile(r"(?i)(?<!\w)(?:what|which|who|when|why|how)\b[^?.!]*?\b(?:did|do) i (?:ask|tell|want|say)\b[^?.!]*?\byou\b|(?<!\w)did i (?:ask|tell|want) you\b")
+FLIPPED_OPENING = re.compile(r"^(\W*)I (asked|told|wanted) you\b")
+
+def unflip_speaker(reply, text):
+    """When they ask about their own words and the answer opens as if Friday said them, swap it back."""
+    if not reply or not ASKED_ABOUT_OWN_WORDS.search(_clean(text)):
+        return reply
+    return FLIPPED_OPENING.sub(lambda m: f'{m.group(1)}You {m.group(2)} me', reply, count=1)
+
 def unsupported_feeling_answer(text, reply, state, floor=.1):
     """The feeling word when they asked about one and the reply says yes while no channel supports it."""
     match = FEELING_QUESTION.search(_clean(text))

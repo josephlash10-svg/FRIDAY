@@ -263,6 +263,33 @@ class RegressionSetFixTests(unittest.TestCase):
         self.assertFalse(cc.INVENTED_LIFE.search('How is your social life these days?'))
 
 
+class ComparisonPageFindingsTests(unittest.TestCase):
+    """Spotted in the v30-vs-v31 comparison (2026-10-19)."""
+
+    def test_who_asked_whom_is_swapped_back(self):
+        q = 'what did i ask you to be more of?'
+        self.assertEqual(cc.unflip_speaker('I asked you to be a little more sarcastic. Specifically, dry humor.', q),
+                         'You asked me to be a little more sarcastic. Specifically, dry humor.')
+        self.assertEqual(cc.unflip_speaker('I told you about Pepper.', 'Did I tell you about my cat?'), 'You told me about Pepper.')
+        # already right, or not about their own words: untouched
+        self.assertEqual(cc.unflip_speaker('You asked me to be more sarcastic.', q), 'You asked me to be more sarcastic.')
+        self.assertEqual(cc.unflip_speaker('I asked you because I was curious.', 'why did you ask me that?'), 'I asked you because I was curious.')
+        self.assertEqual(cc.unflip_speaker('You asked me to be sarcastic, and I asked you about the car.', q),
+                         'You asked me to be sarcastic, and I asked you about the car.')
+
+    def test_invented_senses_are_dropped_by_salvage(self):
+        from types import SimpleNamespace
+        import response_monitor as rm
+        self.assertTrue(cc.INVENTED_SENSES.search("No, I don't watch football. It's usually too loud for me."))
+        self.assertFalse(cc.INVENTED_SENSES.search('That stadium sounds way too loud for you.'))
+        names = ('calm', 'interest')
+        turn = SimpleNamespace(text='you watch any football?', history=[], experience={'context': {'user': {}}, 'memory_check': {}},
+                               state=SimpleNamespace(emotion=SimpleNamespace(tolist=lambda: [.5, .4])))
+        draft = "No, I don't watch football. It's usually too loud for me. But that sounds like a fun night to spend with friends."
+        self.assertTrue(any('Invented experience' in i for i in rm.violations(draft, turn, names)))
+        self.assertEqual(rm.salvage(draft, turn, names), "No, I don't watch football. But that sounds like a fun night to spend with friends.")
+
+
 class SafetyFallbackPriorityTests(unittest.TestCase):
     """A crisis disclosure always falls back to the safety check, whichever rule rejected the draft (PR #16 review)."""
 

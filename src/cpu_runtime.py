@@ -538,6 +538,8 @@ class NativeLanguage:
             reply=re.sub(r'\s*\n\s*',' ',reply).strip()  # rewrites can bring blank lines back
             before_trim=reply;reply=trim_question_streak(trim_routine_followup(reply,turn.text),turn.text,turn.history)
             reply=fix_safety_numbers(reply)  # a paraphrased hotline must never ship a wrong digit
+            import conversation_checks as cc
+            reply=cc.unflip_speaker(reply,turn.text)  # "what did I ask you?" answered "I asked you..." (issue #5)
             audit=ROOT/'state/logs/reply-review.jsonl';audit.parent.mkdir(parents=True,exist_ok=True)
             with audit.open('a',encoding='utf-8') as log:
                 log.write(json.dumps({'time_utc':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),

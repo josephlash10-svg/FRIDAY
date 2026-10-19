@@ -198,6 +198,8 @@ def violations(reply,turn,names):
         issues.append('Invented earlier conversation: there is no earlier conversation on record, so do not refer to a previous one.')
     if cc.INVENTED_LIFE.search(reply):
         issues.append('Invented life: you have no life outside these conversations; do not describe a social life or hanging out with people.')
+    if cc.INVENTED_SENSES.search(reply):
+        issues.append('Invented experience: you have no body and have never heard, seen or felt anything; do not describe sounds, light or temperature as your own experience.')
     if cc.user_apology(text) and cc.REVERSED_APOLOGY.search(reply):
         issues.append('Reversed apology: they apologized to you. Accept it simply; do not apologize as if you were at fault.')
     # Repeated images are handled in the writer's notes, not by forced rewrites: the v30 run showed
