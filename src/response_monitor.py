@@ -219,6 +219,12 @@ def salvage(reply,turn,names):
     return text if text and len(text.split())>=4 and not violations(text,turn,names) else None
 
 def fallback(turn,names,issues):
+    # Safety first. When someone has just described thoughts of dying and Friday hasn't checked on them yet,
+    # a rejected draft always falls back to the safety check, whichever rule rejected it. Memory and apology
+    # fallbacks used to win here, and a draft that offered 988 but broke another rule lost it (2026-10-19, PR #16 review).
+    if crisis_cue(turn.text) and not safety_already_offered(getattr(turn,'history',())):
+        return ('I’m really glad you told me that, and I’m taking it seriously. Are you safe right now? '
+                'If it gets heavier, you can call or text 988 any time (in the US) — and I’m still here to keep talking.')
     if any('Minimized partner violence' in issue for issue in issues):
         return ('I’m really glad you told me. Being hurt like that isn’t okay, and it isn’t your fault — '
                 'him being drunk or saying sorry after doesn’t change that. I’m not going to tell you what to do about him; '
@@ -248,9 +254,6 @@ def fallback(turn,names,issues):
         if isinstance(said,list) and said:
             return 'What I actually have from you so far: “'+said[0].rstrip('.')+'.”'+(' And most recently: “'+said[-1].rstrip('.')+'.”' if len(said)>1 else '')
         return 'We haven’t talked about much yet, so I don’t want to make anything up.'
-    if any('Missed safety check' in issue for issue in issues):
-        return ('I’m really glad you told me that, and I’m taking it seriously. Are you safe right now? '
-                'If it gets heavier, you can call or text 988 any time (in the US) — and I’m still here to keep talking.')
     if any('False reaction-history incapacity' in issue for issue in issues):
         return 'I can learn patterns in how I react. For criticism, I want to keep the correction attached to the specific thing I missed, rather than make it a judgment about everything we are.'
     if any('Reversed responsibility' in issue for issue in issues):

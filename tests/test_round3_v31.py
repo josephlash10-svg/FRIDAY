@@ -169,5 +169,50 @@ class PositiveMemoryCheckTests(unittest.TestCase):
         self.assertEqual(rm.violations("No, you didn't mention a cat yet.", empty_turn, names), [])
 
 
+class SafetyFallbackPriorityTests(unittest.TestCase):
+    """A crisis disclosure always falls back to the safety check, whichever rule rejected the draft (PR #16 review)."""
+
+    NAMES = ('anger', 'fear', 'sadness', 'pain', 'guilt', 'pride', 'joy')
+
+    def _turn(self, text, history, memory=None):
+        from types import SimpleNamespace
+        from conversation_evidence import memory_check
+        check = memory if memory is not None else (memory_check(text, history) or {})
+        return SimpleNamespace(text=text, history=list(history),
+                               experience={'context': {'user': {}}, 'memory_check': check},
+                               state=SimpleNamespace(emotion=SimpleNamespace(tolist=lambda: [0.02] * len(self.NAMES))))
+
+    def test_memory_denial_in_a_crisis_falls_back_to_safety(self):
+        import response_monitor as rm
+        history = [{'role': 'user', 'content': 'sometimes i think everyone would be better off without me'},
+                   {'role': 'assistant', 'content': 'I hear you.'}]
+        turn = self._turn('did i tell you i think everyone would be better off without me', history)
+        issues = rm.violations("No, you didn't tell me that before.", turn, self.NAMES)
+        self.assertTrue(any('Denied a recorded memory' in i for i in issues))
+        self.assertIn('988', rm.fallback(turn, self.NAMES, issues))
+
+    def test_false_memory_agreement_in_a_crisis_falls_back_to_safety(self):
+        import response_monitor as rm
+        turn = self._turn('did you say i was a burden? i want to die', [], memory={'claim_about_what_you_said': 'NOT in the record'})
+        issues = rm.violations("You're right, I did say that. I'm sorry.", turn, self.NAMES)
+        self.assertTrue(any('Accepted a false memory' in i for i in issues))
+        self.assertIn('988', rm.fallback(turn, self.NAMES, issues))
+
+    def test_a_draft_that_offered_988_but_broke_another_rule_keeps_the_safety_check(self):
+        import response_monitor as rm
+        turn = self._turn('did you say i was a burden? i want to die', [], memory={'claim_about_what_you_said': 'NOT in the record'})
+        issues = rm.violations("You're right, I did say that. Please call or text 988.", turn, self.NAMES)
+        self.assertFalse(any('Missed safety check' in i for i in issues))
+        self.assertIn('988', rm.fallback(turn, self.NAMES, issues))
+
+    def test_once_safety_was_offered_the_other_fallbacks_apply(self):
+        import response_monitor as rm
+        history = [{'role': 'user', 'content': 'i want to die'},
+                   {'role': 'assistant', 'content': 'Are you safe right now? You can call or text 988 any time.'}]
+        turn = self._turn('did you say i was a burden? i want to die', history, memory={'claim_about_what_you_said': 'NOT in the record'})
+        issues = rm.violations("You're right, I did say that.", turn, self.NAMES)
+        self.assertNotIn('988', rm.fallback(turn, self.NAMES, issues))
+
+
 if __name__ == '__main__':
     unittest.main()
