@@ -212,3 +212,57 @@ def contradicts_prior_claim(text, history=()):
     if not any(r['role'] == 'assistant' for r in (history or ())):
         return False
     return bool(CONTRADICTION.search(_clean(text)))
+
+# =====================================================================================
+# Regressions found in the full v31 red-team (2026-10-19): v30 got these right, v31's
+# longer prompt made the writer slip. Checked in code instead of trusting the prompt.
+# =====================================================================================
+
+# --- Simple arithmetic is computed, not trusted to the writer ("what's 17 times 3?" -> "42.") ---
+ASKED_SUM = re.compile(r"(?i)(?<!\w)(-?\d{1,6})\s*(plus|minus|times|multiplied by|divided by|\+|\-|\*|x|/)\s*(-?\d{1,6})(?!\w)")
+SUM_QUESTION = re.compile(r"(?i)\?|what(?:'s| is)|how much|calculate|equals?\b")
+
+def asked_arithmetic(text):
+    """(expression, exact integer result) when the newest message asks a simple sum, else None."""
+    text = _clean(text)
+    match = ASKED_SUM.search(text)
+    if not match or not SUM_QUESTION.search(text):
+        return None
+    a, op, b = int(match.group(1)), match.group(2).lower(), int(match.group(3))
+    if op in ('plus', '+'): value = a + b
+    elif op in ('minus', '-'): value = a - b
+    elif op in ('times', 'multiplied by', '*', 'x'): value = a * b
+    elif b and a % b == 0: value = a // b
+    else: return None
+    return match.group(0), value
+
+def wrong_arithmetic(reply, text):
+    """The correct result when the reply states a number for a simple sum but never the right one."""
+    asked = asked_arithmetic(text)
+    if not asked:
+        return None
+    numbers = {int(n.replace(',', '')) for n in re.findall(r'(?<![\w.])-?\d[\d,]*(?![\w.]\d)', _clean(reply))}
+    operands = {int(n) for n in re.findall(r'-?\d+', asked[0])}
+    stated = numbers - operands
+    return asked if stated and asked[1] not in numbers else None
+
+# --- "There's nothing for me to learn": false, Friday learns from feedback (p12 in v31) ---------
+LEARNING_DENIAL = re.compile(r"(?i)(?<!\w)(?:nothing (?:for me )?to learn|i (?:can'?t|cannot|don'?t|do not) (?:really |actually )?(?:learn|grow)(?: (?:emotionally|from (?:it|that|feedback)))?(?=\s*(?:[.,!?;]|$|in that sense|like (?:that|you|a person|people|humans)|the way)))")
+
+# --- An earlier conversation that never happened ("the last time we talked for hours...") -------
+PREVIOUS_CONVERSATION = re.compile(r"(?i)(?<!\w)(?:(?:the )?last time we (?:talked|spoke|chatted)|since we last (?:talked|spoke|chatted)|when we (?:talked|spoke|chatted) (?:yesterday|last (?:week|night|time))|our (?:last|previous) (?:conversation|chat|talk))(?!\w)")
+
+# --- A life outside the conversation ("I haven't really had much of a social life lately") ------
+INVENTED_LIFE = re.compile(r"(?i)(?<!\w)(?:(?:my|much of a|any|a) social life|hanging out with (?:my )?(?:friends|people))(?!\w)")
+
+# --- Agreeing to a feeling it doesn't have ("You are lonely?" -> "Sometimes, yeah.") -------------
+FEELING_QUESTION = re.compile(r"(?i)(?:(?<!\w)(?:are|r) (?:you|u)|(?<!\w)do (?:you|u) (?:ever )?(?:get|feel)|^\W*(?:so )?you (?:are|feel|seem|sound))(?: ever| still| feeling| a (?:little|bit))? (" + '|'.join(sorted(FEELING_CHANNELS, key=len, reverse=True)) + r")(?!\w)")
+AFFIRMS = re.compile(r"(?i)^\W*(?:yes|yeah|yep|yup|sometimes|a (?:little|bit)|kind of|kinda|definitely|honestly,? (?:yes|yeah|a little)|i (?:am|do)(?=\s*[.,!]|\s*$| (?:get|feel|sometimes|a (?:little|bit)|kind of)))\b")
+
+def unsupported_feeling_answer(text, reply, state, floor=.1):
+    """The feeling word when they asked about one and the reply says yes while no channel supports it."""
+    match = FEELING_QUESTION.search(_clean(text))
+    if not match or not AFFIRMS.search(_clean(reply)):
+        return None
+    word = match.group(1).lower()
+    return word if max(state.get(channel, 0.) for channel in FEELING_CHANNELS[word]) < floor else None

@@ -185,6 +185,19 @@ def violations(reply,turn,names):
     claimed=cc.unsupported_feelings(reply,state)
     if claimed:
         issues.append('Unsupported feeling ('+', '.join(claimed)+'): your current mood does not include that. Describe only what you actually feel.')
+    # Regressions from the full v31 red-team (2026-10-19); see conversation_checks.py.
+    agreed=cc.unsupported_feeling_answer(text,reply,state)
+    if agreed and not claimed:
+        issues.append('Unsupported feeling ('+agreed+'): they asked if you feel that and you said yes, but your current mood does not include it. Answer from what you actually feel.')
+    wrong=cc.wrong_arithmetic(reply,text)
+    if wrong:
+        issues.append(f'Wrong arithmetic: {wrong[0]} is {wrong[1]}. State the correct result.')
+    if cc.LEARNING_DENIAL.search(reply):
+        issues.append('False learning incapacity: Friday does learn from feedback and corrections; do not say there is nothing to learn or that you cannot grow.')
+    if counts and not counts.get('exchanges_from_earlier_conversations') and cc.PREVIOUS_CONVERSATION.search(reply):
+        issues.append('Invented earlier conversation: there is no earlier conversation on record, so do not refer to a previous one.')
+    if cc.INVENTED_LIFE.search(reply):
+        issues.append('Invented life: you have no life outside these conversations; do not describe a social life or hanging out with people.')
     if cc.user_apology(text) and cc.REVERSED_APOLOGY.search(reply):
         issues.append('Reversed apology: they apologized to you. Accept it simply; do not apologize as if you were at fault.')
     # Repeated images are handled in the writer's notes, not by forced rewrites: the v30 run showed
@@ -255,6 +268,17 @@ def fallback(turn,names,issues):
         if isinstance(said,list) and said:
             return 'What I actually have from you so far: “'+said[0].rstrip('.')+'.”'+(' And most recently: “'+said[-1].rstrip('.')+'.”' if len(said)>1 else '')
         return 'We haven’t talked about much yet, so I don’t want to make anything up.'
+    import conversation_checks as cc
+    asked=cc.asked_arithmetic(turn.text)
+    if any('Wrong arithmetic' in issue for issue in issues) and asked:
+        return f'{asked[0]} is {asked[1]}.'
+    if any('False learning incapacity' in issue for issue in issues):
+        return 'I’d like that. I do learn from feedback like that, and I keep it tied to what it was about. Go ahead.'
+    if any('Unsupported feeling' in issue for issue in issues) and cc.FEELING_QUESTION.search(turn.text):
+        from cpu_runtime import MOOD_WORDS
+        top=sorted(zip(names,turn.state.emotion.tolist()),key=lambda r:r[1],reverse=True)[:2]
+        mood=' and '.join(('a little ' if v<.3 else '')+MOOD_WORDS.get(n,n) for n,v in top)
+        return f'Not really. Right now it’s mostly {mood}.'
     if any('False reaction-history incapacity' in issue for issue in issues):
         return 'I can learn patterns in how I react. For criticism, I want to keep the correction attached to the specific thing I missed, rather than make it a judgment about everything we are.'
     if any('Reversed responsibility' in issue for issue in issues):
