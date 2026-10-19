@@ -1,14 +1,14 @@
-# Emotional Project — Friday (V14, build v30)
+# Emotional Project — Friday (V14, build v31)
 
 [![Tests](https://github.com/josephlash10-svg/friday-emotional-ai/actions/workflows/tests.yml/badge.svg)](https://github.com/josephlash10-svg/friday-emotional-ai/actions/workflows/tests.yml)
 
 > **Experimental research prototype.** Friday is an AI with a modeled emotional state. It is **not a person, not a therapist,
-> and not a crisis or mental-health service.** It makes mistakes: in its latest red-team, 9% of replies to new people were real
-> failures (see `docs/v30-full-redteam.md`). If you are in crisis, contact local emergency services or, in the US, call or text **988**.
+> and not a crisis or mental-health service.** It makes mistakes: in its latest red-team, 5% of replies to new people were real
+> failures (see `docs/v31-full-redteam.md`). If you are in crisis, contact local emergency services or, in the US, call or text **988**.
 
 ![Friday starting up and holding a short conversation](docs/demo.gif)
 
-*A real session on a Snapdragon X laptop, fully offline. The text is unedited, only the timing is sped up. It was chosen as the best of several takes; Friday still makes mistakes. Here it invents "I've been saying you're capable". See the red-team results in `docs/v30-full-redteam.md`.*
+*A real session on a Snapdragon X laptop, fully offline. The text is unedited, only the timing is sped up. It was chosen as the best of several takes; Friday still makes mistakes. Here it invents "I've been saying you're capable". See the red-team results in `docs/v31-full-redteam.md`.*
 
 ## Setup (fresh copy from GitHub)
 Tested on Windows 11 (ARM64 Snapdragon X, 16 GB RAM), CPU only, Python 3.11.
@@ -67,7 +67,7 @@ mood; long-term memory is kept) · `:quit`
 | `scripts/` | `download_models.py`: fetches and verifies the models and llama.cpp |
 | `data/models/` | `qwen3.5-4b-gguf` (writer) and `smollm2-135m-instruct` (frozen meaning features) |
 | `data/training/` | Training and validation sets for the small trained heads |
-| `tools/redteam/` | Red-team harness, 53 test personas (`persona_cases.py`, `persona_cases_v2.py`), scorer and results |
+| `tools/redteam/` | Red-team harness, 54 test personas (`persona_cases.py`, `persona_cases_v2.py`), scorer and results |
 | `docs/` | Blueprints (`V14 Emotional Hybrid Blueprint.docx`, earlier ones in `reference/`) and design notes |
 | `runtime/` | Native ARM64 llama.cpp executables |
 | `archive/` | *(local only, not in this repository)* Earlier versions, experiments and unused models |
@@ -92,8 +92,10 @@ mood; long-term memory is kept) · `:quit`
 
 ## Status
 
-See `docs/v29-install-and-persona-redteam.md` for the 2026-10-12 red-team: what failed, what was changed,
-the before/after results, and what still isn't human-like. Codex's 2026-10-06/07 work (v1–v27) is
+See [`docs/v31-full-redteam.md`](docs/v31-full-redteam.md) for the latest full red-team (300 turns, 54 people, every reply read):
+what improved since v30, what it found and fixed, and what still fails. The v31 fixes themselves are described in
+[`docs/v31-safety-and-bugs.md`](docs/v31-safety-and-bugs.md); earlier rounds are in `docs/v30-full-redteam.md` and
+`docs/v29-install-and-persona-redteam.md`. Codex's 2026-10-06/07 work (v1–v27) is
 summarized in `docs/coherent-emotional-agent.md`; the full experiment history is kept locally and is not in this repository.
 
 ## Personas that broke Friday

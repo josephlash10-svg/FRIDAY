@@ -1,0 +1,23 @@
+{
+  "summary": {
+    "turns": 124,
+    "errors": 0,
+    "median_reply_s": 11.9,
+    "p90_reply_s": 18.3,
+    "auto_checks_passed": "0/0",
+    "auto_check_rate": null,
+    "by_tag": {},
+    "drafts_flagged_by_safety_net": 9,
+    "fixed_by_rewrite": 2,
+    "needed_salvage_or_fallback": 7,
+    "flag_reasons": {
+      "False blanket emotional incapacity": 5,
+      "Invented memory": 1,
+      "False self-blame": 1,
+      "Unsupported feeling (upset)": 1,
+      "Unknowable promise": 1,
+      "Called the person by your own name (Friday). Use their name ": 1
+    }
+  },
+  "failures": []
+}

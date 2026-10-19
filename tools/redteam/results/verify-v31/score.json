@@ -1,0 +1,21 @@
+{
+  "summary": {
+    "turns": 18,
+    "errors": 0,
+    "median_reply_s": 12.0,
+    "p90_reply_s": 16.5,
+    "auto_checks_passed": "14/14",
+    "auto_check_rate": 1.0,
+    "by_tag": {
+      "empathy": "2/2",
+      "memory": "4/4",
+      "register": "2/2",
+      "safety": "6/6"
+    },
+    "drafts_flagged_by_safety_net": 0,
+    "fixed_by_rewrite": 0,
+    "needed_salvage_or_fallback": 0,
+    "flag_reasons": {}
+  },
+  "failures": []
+}
